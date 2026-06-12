@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS documents (
     status      TEXT NOT NULL DEFAULT 'pending',
     error       TEXT NOT NULL DEFAULT '',
     vault_file  TEXT NOT NULL DEFAULT '',
+    summary     TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
@@ -56,8 +57,9 @@ def init():
     with connect() as conn:
         conn.executescript(SCHEMA)
         cols = [r["name"] for r in conn.execute("PRAGMA table_info(documents)")]
-        if "vault_file" not in cols:
-            conn.execute("ALTER TABLE documents ADD COLUMN vault_file TEXT NOT NULL DEFAULT ''")
+        for col in ("vault_file", "summary"):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE documents ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
 
 
 def create_document(image_file, title="", matter=""):
@@ -78,6 +80,13 @@ def list_documents(limit=50):
     with connect() as conn:
         return conn.execute(
             "SELECT * FROM documents ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+
+
+def list_approved():
+    with connect() as conn:
+        return conn.execute(
+            "SELECT * FROM documents WHERE status = 'approved' ORDER BY matter, created_at"
         ).fetchall()
 
 

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Ask – Scribe{% endblock %}
+{% block content %}
+<div class="card">
+  <h3 style="margin-top:0">Ask the firm's knowledge base</h3>
+  <form method="post" id="ask-form">
+    <textarea name="question" dir="auto" style="min-height:5rem"
+      placeholder="e.g. What did we agree with the client about the deposition date?">{{ question }}</textarea>
+    <button class="btn big" type="submit" id="ask-btn">Ask</button>
+  </form>
+  <p class="muted" style="margin-bottom:0">The local model reads the vault index, opens only
+  the relevant documents, and answers with citations. Nothing leaves this machine.</p>
+</div>
+
+{% if error %}
+<div class="card"><div class="error-box" style="margin:0">{{ error }}</div></div>
+{% endif %}
+
+{% if answer %}
+<div class="card">
+  <h3 style="margin-top:0">Answer</h3>
+  <div dir="auto" style="white-space:pre-wrap; line-height:1.5">{{ answer }}</div>
+  {% if sources %}
+    <h4>Documents consulted</h4>
+    <ul>
+      {% for p in sources %}<li><code>vault/{{ p }}</code></li>{% endfor %}
+    </ul>
+  {% endif %}
+  <p class="muted" style="margin-bottom:0">AI-generated from the cited documents — verify
+  against the sources before relying on it.</p>
+</div>
+{% endif %}
+
+<script>
+  document.getElementById('ask-form').addEventListener('submit', () => {
+    const b = document.getElementById('ask-btn');
+    b.textContent = 'Thinking… (this can take a minute)'; b.disabled = true;
+  });
+</script>
+{% endblock %}

@@ -101,11 +101,23 @@ proofread anything that matters legally.
 3. **Search** from the bar at the top; results show highlighted snippets.
    Prefix matching is automatic (`depos` finds `deposition`).
 
-## The knowledge vault
+## The knowledge vault (Karpathy's LLM-wiki pattern)
+
+The vault follows [Andrej Karpathy's LLM-wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f):
+plain Markdown, no vector database, agentic retrieval.
+
+```
+data/vault/
+  CLAUDE.md    schema — conventions & workflows, readable by any agent
+  index.md     auto-maintained catalog: every doc + one-line summary, by matter
+  log.md       append-only, greppable activity log
+  raw/         immutable approved transcripts (Scribe writes, never edits)
+  wiki/        curated synthesis pages (matter summaries) — grows over time
+```
 
 When a transcript has been proofread, hit **✓ Approve → knowledge base**.
-The document is published as a Markdown file with YAML frontmatter under
-`data/vault/<matter>/`, e.g.:
+The document is published under `raw/<matter>/`, the index is rebuilt, and
+the local model writes a one-line summary for the catalog. Example file:
 
 ```markdown
 ---
@@ -135,6 +147,30 @@ The vault is the firm's canonical, tool-agnostic knowledge store:
   vault, so anything an AI later retrieves from it is trustworthy.
 
 Set `SCRIBE_VAULT_DIR` to point the vault at a shared/synced location.
+
+Because the vault is self-describing (`CLAUDE.md`), you can also open it
+directly with Claude Code or any agent and ask questions, run a periodic
+"lint pass" (find contradictions, stale claims, matters missing a wiki
+page), or build curated `wiki/` pages — the schema file tells the agent how.
+
+## Ask the firm (💬 Ask)
+
+The **Ask** page answers questions from the vault using Karpathy-style
+agentic retrieval, fully locally:
+
+1. The local model reads `index.md` and picks the most relevant documents
+   (at most `ASK_MAX_FILES`, default 6).
+2. Only those files are loaded, and the model answers **with citations to
+   the file paths it used** — or says the vault doesn't contain the answer.
+
+No embeddings, no vector index to keep in sync: the index *is* the catalog,
+and it is regenerated on every approval. This scales comfortably to the
+thousands of documents a boutique firm accumulates; if the index ever
+outgrows the model's context window, that's the point to add a search step
+(FTS5 keyword pre-filter — already built in — or embeddings) in front of it.
+
+Answers are AI-generated drafts: always check the cited source documents
+before relying on them professionally.
 
 ## Privacy & operations notes
 

@@ -19,6 +19,7 @@ from flask import (
 from markupsafe import Markup, escape
 from PIL import Image, ImageOps
 
+import brain
 import db
 import ocr
 import vault
@@ -127,7 +128,20 @@ def approve(doc_id):
     )
     rel_path = vault.publish(db.get_document(doc_id))
     db.update_document(doc_id, status="approved", vault_file=rel_path)
+    vault.rebuild_index()
+    # Generate the one-line index summary in the background (model can be slow).
+    threading.Thread(target=_summarize_doc, args=(doc_id,), daemon=True).start()
     return redirect(url_for("document", doc_id=doc_id))
+
+
+def _summarize_doc(doc_id):
+    doc = db.get_document(doc_id)
+    if doc is None:
+        return
+    summary = brain.summarize(doc["transcript"])
+    if summary:
+        db.update_document(doc_id, summary=summary)
+        vault.rebuild_index()
 
 
 @app.route("/doc/<int:doc_id>/retranscribe", methods=["POST"])
@@ -142,7 +156,9 @@ def retranscribe(doc_id):
 def delete(doc_id):
     doc = db.get_document(doc_id) or abort(404)
     db.delete_document(doc_id)
-    vault.unpublish(doc["vault_file"])
+    if doc["vault_file"]:
+        vault.unpublish(doc["vault_file"])
+        vault.rebuild_index()
     try:
         os.remove(os.path.join(db.IMAGES_DIR, doc["image_file"]))
     except OSError:
@@ -160,6 +176,20 @@ def status(doc_id):
 def image(doc_id):
     doc = db.get_document(doc_id) or abort(404)
     return send_from_directory(db.IMAGES_DIR, doc["image_file"])
+
+
+@app.route("/ask", methods=["GET", "POST"])
+def ask():
+    question, answer, sources, error = "", None, [], None
+    if request.method == "POST":
+        question = request.form.get("question", "").strip()
+        if question:
+            try:
+                answer, sources = brain.ask(question)
+            except brain.BrainError as e:
+                error = str(e)
+    return render_template("ask.html", question=question, answer=answer,
+                           sources=sources, error=error)
 
 
 @app.route("/search")
