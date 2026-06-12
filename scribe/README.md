@@ -101,6 +101,41 @@ proofread anything that matters legally.
 3. **Search** from the bar at the top; results show highlighted snippets.
    Prefix matching is automatic (`depos` finds `deposition`).
 
+## The knowledge vault
+
+When a transcript has been proofread, hit **✓ Approve → knowledge base**.
+The document is published as a Markdown file with YAML frontmatter under
+`data/vault/<matter>/`, e.g.:
+
+```markdown
+---
+id: scribe-12
+title: "Meeting notes"
+matter: "Cohen v. Levi"
+type: handwritten-note
+source: scribe
+source_image: images/1781272749_68326373.jpg
+scanned_at: "2026-06-12 13:59:09"
+status: approved
+---
+
+Client agreed to reschedule the deposition to July 3rd.
+```
+
+The vault is the firm's canonical, tool-agnostic knowledge store:
+
+- **Plain files, organized by matter.** Browse or edit them with
+  [Obsidian](https://obsidian.md) (local-only), sync the folder to the office
+  file server, back it up like any folder.
+- **One convention, many sources.** Scribe notes are the first source; other
+  ingestion jobs (emails, filings, memos) can write the same
+  frontmatter format into the same vault, and everything downstream — search,
+  RAG, matter timelines — works uniformly.
+- **Approval is the quality gate.** Only human-reviewed text enters the
+  vault, so anything an AI later retrieves from it is trustworthy.
+
+Set `SCRIBE_VAULT_DIR` to point the vault at a shared/synced location.
+
 ## Privacy & operations notes
 
 - **Set `SCRIBE_PASSWORD`** so only staff on the Wi-Fi can open it, and keep

@@ -21,6 +21,7 @@ from PIL import Image, ImageOps
 
 import db
 import ocr
+import vault
 
 try:  # iPhones may upload HEIC images from the photo library
     from pillow_heif import register_heif_opener
@@ -113,6 +114,22 @@ def save(doc_id):
     return redirect(url_for("document", doc_id=doc_id))
 
 
+@app.route("/doc/<int:doc_id>/approve", methods=["POST"])
+def approve(doc_id):
+    """Save edits, then publish the transcript to the knowledge vault."""
+    doc = db.get_document(doc_id) or abort(404)
+    db.update_document(
+        doc_id,
+        title=request.form.get("title", "").strip(),
+        matter=request.form.get("matter", "").strip(),
+        transcript=request.form.get("transcript", ""),
+        error="",
+    )
+    rel_path = vault.publish(db.get_document(doc_id))
+    db.update_document(doc_id, status="approved", vault_file=rel_path)
+    return redirect(url_for("document", doc_id=doc_id))
+
+
 @app.route("/doc/<int:doc_id>/retranscribe", methods=["POST"])
 def retranscribe(doc_id):
     db.get_document(doc_id) or abort(404)
@@ -125,6 +142,7 @@ def retranscribe(doc_id):
 def delete(doc_id):
     doc = db.get_document(doc_id) or abort(404)
     db.delete_document(doc_id)
+    vault.unpublish(doc["vault_file"])
     try:
         os.remove(os.path.join(db.IMAGES_DIR, doc["image_file"]))
     except OSError:

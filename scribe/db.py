@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS documents (
     transcript  TEXT NOT NULL DEFAULT '',
     status      TEXT NOT NULL DEFAULT 'pending',
     error       TEXT NOT NULL DEFAULT '',
+    vault_file  TEXT NOT NULL DEFAULT '',
     created_at  TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 
@@ -54,6 +55,9 @@ def init():
     os.makedirs(IMAGES_DIR, exist_ok=True)
     with connect() as conn:
         conn.executescript(SCHEMA)
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(documents)")]
+        if "vault_file" not in cols:
+            conn.execute("ALTER TABLE documents ADD COLUMN vault_file TEXT NOT NULL DEFAULT ''")
 
 
 def create_document(image_file, title="", matter=""):
