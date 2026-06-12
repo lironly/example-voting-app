@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+    <label for="photo-input" class="btn big">📷 Scan a page</label>
+    <input id="photo-input" type="file" name="photo" accept="image/*" capture="environment" hidden>
+    <div id="upload-fields" hidden>
+      <label>Title (optional)</label>
+      <input type="text" name="title" placeholder="e.g. Meeting notes 12 Jun">
+      <label>Matter / case (optional)</label>
+      <input type="text" name="matter" placeholder="e.g. Cohen v. Levi">
+      <button class="btn big" type="submit">Upload &amp; transcribe</button>
+    </div>
+  </form>
+  <p class="muted" style="margin-bottom:0">
+    {% if engine == 'ollama' %}OCR: local Ollama model <code>{{ model }}</code>
+    {% else %}Automatic OCR is off — transcripts are typed in manually.{% endif %}
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Recent documents</h3>
+  {% for doc in docs %}
+    <a class="doc-row" href="{{ url_for('document', doc_id=doc['id']) }}">
+      <img src="{{ url_for('image', doc_id=doc['id']) }}" alt="" loading="lazy">
+      <div class="doc-meta">
+        <div class="t">{{ doc['title'] or 'Untitled #' ~ doc['id'] }}</div>
+        <div class="m">{{ doc['matter'] }} {{ doc['created_at'] }}</div>
+      </div>
+      <span class="badge {{ doc['status'] }}">{{ doc['status'] }}</span>
+    </a>
+  {% else %}
+    <p class="muted">Nothing scanned yet. Tap “Scan a page” to start.</p>
+  {% endfor %}
+</div>
+
+<script>
+  const input = document.getElementById('photo-input');
+  input.addEventListener('change', () => {
+    if (input.files.length) document.getElementById('upload-fields').hidden = false;
+  });
+</script>
+{% endblock %}

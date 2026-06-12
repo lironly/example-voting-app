@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Scribe{% endblock %}</title>
+<style>
+  :root { --accent: #1f4e79; --bg: #f5f4f0; --card: #fff; --muted: #777; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg); color: #222; }
+  header { background: var(--accent); color: #fff; padding: .7rem 1rem;
+           display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  header a { color: #fff; text-decoration: none; font-weight: 600; }
+  header form { flex: 1; min-width: 180px; display: flex; }
+  header input[type=search] { flex: 1; border: 0; border-radius: 8px 0 0 8px;
+                              padding: .5rem .7rem; font-size: 1rem; }
+  header button { border: 0; border-radius: 0 8px 8px 0; padding: .5rem .9rem;
+                  background: #163a5c; color: #fff; font-size: 1rem; }
+  main { max-width: 720px; margin: 0 auto; padding: 1rem; }
+  .card { background: var(--card); border-radius: 12px; padding: 1rem;
+          margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  input[type=text], input[type=password], textarea {
+      width: 100%; padding: .55rem .7rem; font-size: 1rem;
+      border: 1px solid #ccc; border-radius: 8px; margin: .25rem 0 .75rem; }
+  textarea { min-height: 14rem; font-family: inherit; line-height: 1.45; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; border: 0;
+         border-radius: 8px; padding: .6rem 1.1rem; font-size: 1rem; cursor: pointer;
+         text-decoration: none; }
+  .btn.secondary { background: #666; }
+  .btn.danger { background: #a33; }
+  .btn.big { width: 100%; padding: .9rem; font-size: 1.1rem; text-align: center; }
+  .doc-row { display: flex; gap: .8rem; align-items: center; padding: .6rem 0;
+             border-bottom: 1px solid #eee; text-decoration: none; color: inherit; }
+  .doc-row:last-child { border-bottom: 0; }
+  .doc-row img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
+                 background: #ddd; flex-shrink: 0; }
+  .doc-meta { min-width: 0; }
+  .doc-meta .t { font-weight: 600; }
+  .doc-meta .m { color: var(--muted); font-size: .85rem; }
+  .badge { font-size: .72rem; padding: .15rem .5rem; border-radius: 999px;
+           color: #fff; margin-left: auto; flex-shrink: 0; }
+  .badge.done { background: #2e7d32; }
+  .badge.pending, .badge.processing { background: #e0a000; }
+  .badge.error { background: #a33; }
+  .snip { color: #444; font-size: .9rem; margin-top: .25rem; overflow-wrap: anywhere; }
+  mark { background: #ffe58a; }
+  .error-box { background: #fdecea; border: 1px solid #f5c6c2; color: #8a1f17;
+               border-radius: 8px; padding: .7rem; margin-bottom: .75rem; }
+  .muted { color: var(--muted); }
+  label { font-weight: 600; font-size: .9rem; }
+  img.page { width: 100%; border-radius: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="{{ url_for('index') }}">📝 Scribe</a>
+  <form action="{{ url_for('search') }}" method="get">
+    <input type="search" name="q" placeholder="Search transcripts…" value="{{ q or '' }}">
+    <button>Search</button>
+  </form>
+</header>
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>

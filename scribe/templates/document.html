@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ doc['title'] or 'Document #' ~ doc['id'] }} – Scribe{% endblock %}
+{% block content %}
+<div class="card">
+  <span class="badge {{ doc['status'] }}" id="status-badge">{{ doc['status'] }}</span>
+  <span class="muted">scanned {{ doc['created_at'] }}</span>
+
+  {% if doc['error'] %}
+    <div class="error-box" style="margin-top:.75rem">{{ doc['error'] }}</div>
+  {% endif %}
+
+  <form action="{{ url_for('save', doc_id=doc['id']) }}" method="post" style="margin-top:.75rem">
+    <label>Title</label>
+    <input type="text" name="title" value="{{ doc['title'] }}">
+    <label>Matter / case</label>
+    <input type="text" name="matter" value="{{ doc['matter'] }}">
+    <label>Transcript</label>
+    <textarea name="transcript" dir="auto"
+      placeholder="{% if doc['status'] in ('pending', 'processing') %}Transcribing…{% else %}Type or paste the transcript here{% endif %}">{{ doc['transcript'] }}</textarea>
+    <button class="btn" type="submit">Save</button>
+  </form>
+
+  <form action="{{ url_for('retranscribe', doc_id=doc['id']) }}" method="post" style="display:inline">
+    <button class="btn secondary" type="submit">Re-run OCR</button>
+  </form>
+  <form action="{{ url_for('delete', doc_id=doc['id']) }}" method="post" style="display:inline"
+        onsubmit="return confirm('Delete this document and its image?')">
+    <button class="btn danger" type="submit">Delete</button>
+  </form>
+</div>
+
+<div class="card">
+  <img class="page" src="{{ url_for('image', doc_id=doc['id']) }}" alt="Scanned page">
+</div>
+
+{% if doc['status'] in ('pending', 'processing') %}
+<script>
+  // Poll until OCR finishes, then reload to show the transcript.
+  const poll = setInterval(async () => {
+    const r = await fetch("{{ url_for('status', doc_id=doc['id']) }}");
+    const j = await r.json();
+    if (j.status !== 'pending' && j.status !== 'processing') {
+      clearInterval(poll);
+      location.reload();
+    }
+  }, 2000);
+</script>
+{% endif %}
+{% endblock %}
