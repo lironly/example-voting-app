@@ -25,7 +25,7 @@ cd scribe
 docker compose up -d --build
 
 # one-time: download the OCR model into the local Ollama (~6 GB)
-docker compose exec ollama ollama pull qwen2.5vl:7b
+docker compose exec ollama ollama pull qwen3-vl:8b
 ```
 
 Then find the PC's LAN IP (e.g. `192.168.1.50`) and on the iPhone open:
@@ -41,7 +41,7 @@ behaves like an app.
 
 ```bash
 # 1. install Ollama from https://ollama.com and pull a vision model
-ollama pull qwen2.5vl:7b
+ollama pull qwen3-vl:8b
 
 # 2. run the app
 cd scribe
@@ -58,7 +58,7 @@ python app.py
 | `SCRIBE_DATA_DIR` | `scribe/data`            | Where images + database are stored. **Back this folder up.** |
 | `OCR_ENGINE`      | `ollama`                 | `ollama` or `none` (manual typing only). |
 | `OLLAMA_URL`      | `http://localhost:11434` | Where Ollama runs. |
-| `OLLAMA_MODEL`    | `qwen2.5vl:7b`           | Any Ollama vision model. |
+| `OLLAMA_MODEL`    | `qwen3-vl:8b`            | Any Ollama vision model. |
 | `OLLAMA_TIMEOUT`  | `600`                    | Seconds to wait per page. |
 
 ## Choosing a model
@@ -68,10 +68,24 @@ open-weight **vision-language models** are currently the best local option:
 
 | Model               | Size   | Notes |
 |---------------------|--------|-------|
-| `qwen2.5vl:7b`      | ~6 GB  | Default. Strong handwriting OCR, multilingual incl. Hebrew. Needs ~8 GB RAM/VRAM. |
-| `qwen2.5vl:3b`      | ~3 GB  | For weaker PCs; noticeably less accurate on messy writing. |
-| `qwen2.5vl:32b`     | ~21 GB | Best quality if you have a big GPU (24 GB+). |
-| `llama3.2-vision`   | ~8 GB  | Alternative; weaker on non-Latin scripts. |
+| `qwen3-vl:8b`       | ~6 GB  | Default. Strong handwriting OCR; its OCR officially covers 32 languages **including Hebrew**. Needs ~8 GB RAM/VRAM. |
+| `qwen3-vl:4b`       | ~3 GB  | For weaker PCs; less accurate on messy writing. |
+| `qwen3-vl:32b`      | ~21 GB | Best quality if you have a big GPU (24 GB+). |
+| `qwen2.5vl:7b`      | ~6 GB  | Previous generation; fine for English, weaker on Hebrew. |
+
+### A note on Hebrew handwriting
+
+Expect English handwriting to work well out of the box. Hebrew is harder:
+modern cursive Hebrew letterforms differ completely from print, and little
+training data exists for them — this is a known weak spot for *every* OCR
+system, not just local ones. Realistic expectations: neat Hebrew block
+writing should produce a usable draft with `qwen3-vl`; real Israeli cursive
+will need significant correction. Two mitigations are built into the
+workflow: every transcript is reviewed/edited before saving, and each
+corrected page you save is effectively a labeled training example — if the
+firm later wants higher Hebrew accuracy, the accumulated image+transcript
+pairs in `data/` are exactly what's needed to fine-tune a model on the
+specific handwriting of the firm's own attorneys.
 
 A PC with a mid-range NVIDIA GPU (or an Apple Silicon Mac) transcribes a page
 in seconds; CPU-only works but takes a minute or more per page. Every
