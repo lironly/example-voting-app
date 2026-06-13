@@ -1,5 +1,0 @@
-flask>=3.0
-waitress>=3.0
-requests>=2.31
-pillow>=10.0
-pillow-heif>=0.16
